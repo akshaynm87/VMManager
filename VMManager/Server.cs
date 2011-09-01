@@ -235,8 +235,6 @@ namespace VMManager
 
         private void GetVMInfo()
         {
-            Debug.WriteLine("Get VMInfo");
-
             try
             {
                 Debug.WriteLine("Opening Registry");
@@ -291,8 +289,6 @@ namespace VMManager
                                  entry.busy = false;
                             }
 
-                           
-                            Debug.WriteLine("VM Entry " + entry.vmName + " " + entry.vmFile + " " + entry.snapshotName);
                             vmList.Add(entry);
                         }
                     }
@@ -347,14 +343,11 @@ namespace VMManager
                 queue.clearQueue();
                 lock (vmList)
                 {
-                    Debug.WriteLine("onRegChanged lock this");
-
                     vmList.Clear();
 
 
                 } GetVMInfo();
-                //   updateList();
-                
+                            
             }
         }
     }

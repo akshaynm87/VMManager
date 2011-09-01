@@ -122,8 +122,6 @@ namespace VmManagerConfiguration
                                 entry.busy = false;
                             }
 
-                            Debug.WriteLine("VM Entry " + entry.vmName + " " + entry.vmFile + " " + entry.snapshotName);
-
                             vmList.Add(entry);
                         }
                     }
@@ -133,8 +131,7 @@ namespace VmManagerConfiguration
             catch (Exception e)
             {
                 Debug.WriteLine("Exception while reading from reg " + e.Message);
-                Debug.WriteLine(e.InnerException);
-                Debug.WriteLine(e.StackTrace);
+            
             }
 
         }
@@ -169,6 +166,7 @@ namespace VmManagerConfiguration
                         }
                         else
                         {
+                            labelSetActive.Text = "No";
                             textBoxVMFile.ReadOnly = false;
                             textBoxVMSnapshotName.ReadOnly = false;
                             buttonVMFile.Enabled = true;
@@ -266,7 +264,6 @@ namespace VmManagerConfiguration
                 listBoxVMList.SelectedIndex = shouldSelect;
                 listBoxVMList.SetSelected(shouldSelect, true);
                
-                Debug.WriteLine("delete select index");
             }
 
 
@@ -298,7 +295,7 @@ namespace VmManagerConfiguration
                                 tempVMUsername = vmUsername + i;
                                 tempVMPassword = vmPassword + i;
                                 tempVMTimestamp = vmTimestamp + i;
-                                Debug.WriteLine("string to del " + tempVMFile);
+                                
                                 key.DeleteValue(tempVMFile);
                                 key.DeleteValue(tempVMSnapshotName);
                                 key.DeleteValue(tempVMName);
@@ -317,9 +314,6 @@ namespace VmManagerConfiguration
                     {
                         return true;
                     }
-
-
-
                 }
                 else
                 {
@@ -330,7 +324,6 @@ namespace VmManagerConfiguration
             catch (Exception e)
             {
 
-                Debug.WriteLine("Exeption " + e.StackTrace);
                 Debug.WriteLine("Exeption " + e.Message);
                 return false;
             }
@@ -433,7 +426,7 @@ namespace VmManagerConfiguration
                   return entry;
             
                 }
-                Debug.WriteLine("currentEntry"+entry.vmName);
+              
             } return null;
         }
         private void buttonRestoreVM_Click(object sender, EventArgs e)
@@ -446,8 +439,7 @@ namespace VmManagerConfiguration
 
         public void restoreVM(vmEntry entry){
                     
-            
-            Debug.WriteLine("restore");
+           
             string fileNameJoined;
             string [] tempVMFileArray = entry.vmFile.Split('\\');
             fileNameJoined = String.Join("\\\\", tempVMFileArray, 0, tempVMFileArray.Length);
@@ -587,7 +579,7 @@ namespace VmManagerConfiguration
             catch (Exception e)
             {
                 Debug.WriteLine("Exception while deleting entry from Reg " + e.Message);
-                Debug.WriteLine(e.StackTrace);
+                
             }
         }
 

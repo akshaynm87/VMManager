@@ -52,7 +52,6 @@
       <DependentUpon>AddEntry.cs</DependentUpon>
     </Compile>
     <Compile Include="Client.cs" />
-    <Compile Include="LocationStringConverter.cs" />
     <Compile Include="RegistryMonitor.cs" />
     <Compile Include="vmEntry.cs" />
     <Compile Include="VMManagerConfigUI.cs">
@@ -74,6 +73,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="VMManagerConfigUI.resx">
       <DependentUpon>VMManagerConfigUI.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>

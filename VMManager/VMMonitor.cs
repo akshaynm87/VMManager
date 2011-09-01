@@ -62,8 +62,7 @@ namespace VMManager
                 }
                if(key.GetValue(interval) != null)
                {
-                   Debug.WriteLine("reading expiry time");
-                    expiryTime = Convert.ToInt32(key.GetValue(valid).ToString());
+                   expiryTime = Convert.ToInt32(key.GetValue(valid).ToString());
                 }
                else{
                expiryTime=defaultExpiryTime;
@@ -74,7 +73,7 @@ namespace VMManager
         private void checkVM()
         {
 
-            Debug.WriteLine("TImer fired");
+            Debug.WriteLine("Timer fired");
             while (queue.isEmpty() == false)
             {
                 Debug.WriteLine("Queue not empty");
