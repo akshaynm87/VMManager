@@ -47,6 +47,7 @@
     <Compile Include="ProjectInstaller.Designer.cs">
       <DependentUpon>ProjectInstaller.cs</DependentUpon>
     </Compile>
+    <Compile Include="RegistryMonitor.cs" />
     <Compile Include="Server.cs">
     </Compile>
     <Compile Include="VMEntry.cs" />

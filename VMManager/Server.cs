@@ -26,27 +26,34 @@ namespace VMManager
         private byte RESP_LEN_OFFSET = 4;
 
         string regDir = @"SOFTWARE\RetherNetworksInc\DOFS-SandBox";
-        string writeRegDir = @"SOFTWARE\RetherNetworksInc\DOFS-SandBox\CurrentVMSet";
+      //  string regMonDir = "HKEY_LOCAL_MACHINE\\SOFTWARE\\RetherNetworksInc\\DOFS-SandBox";
+     
         string numVM = "numVM";
         string vmName = "VMName";
         string vmFile = "VMFile";
         string vmSnapshot = "VMSnapshot";
+        string vmUsername = "VMUsername";
+        string vmPassword = "VMPassword";
+        string valid = "valid";
+        string interval = "checkInterval";
 
-        string vmPath = "VMPath";
         string vmTimestamp = "VMTimestamp";
-
+        
         int numVMs;
-        List<vmEntry> vmList;        
+        List<vmEntry> vmList;
+        public Boolean ownWrite { get; set; }
 
         public Server(VMActivityQueue q)
         {
             queue = q;
             vmList = new List<vmEntry>();
             GetVMInfo();
-            CheckActiveVMSet();
-           
+           // CheckActiveVMSet();
+            ownWrite = false;
+
             listeningThread = new Thread(new ThreadStart(ListenForRequests));
             listeningThread.Start();
+           
         }
 
         public void ListenForRequests()
@@ -135,6 +142,7 @@ namespace VMManager
 
                         /* First send the length of the data */
                         sock.Send(clientResp, RESP_LEN_OFFSET, 0);
+                        Debug.WriteLine("Respone 1: "+ System.Text.ASCIIEncoding.ASCII.GetString(clientResp));
 /*
                         string address = "192.168.20.174:TestUser1:abcdefghij";
                         byte[] ipAddr = System.Text.ASCIIEncoding.ASCII.GetBytes(address);
@@ -145,6 +153,16 @@ namespace VMManager
 */
                         if(clientResp.Length > RESP_LEN_OFFSET)
                             sock.Send(clientResp, RESP_LEN_OFFSET, clientResp.Length - RESP_LEN_OFFSET, 0);
+
+                        Debug.WriteLine("Respone 2: " + System.Text.ASCIIEncoding.ASCII.GetString(clientResp));
+                    }
+                    if (clientResp == null) {
+                        String zeroString = "0000";
+
+                        clientResp = System.Text.ASCIIEncoding.ASCII.GetBytes(zeroString);
+                        Debug.WriteLine("Sending sorry 0000 response ");
+                        sock.Send(clientResp, RESP_LEN_OFFSET, 0);
+                        
                     }
                 }
             }
@@ -184,14 +202,18 @@ namespace VMManager
                     Debug.WriteLine("Sending Request to VM");
                     clientResp = vmClient.sendReqToVM(request);
 
-                    if (clientResp.Length > RESP_LEN_OFFSET)
-                    {
-/*                        vmEntry entry = new vmEntry(DateTime.Now,
-                                                    "\"C:\\Documents and Settings\\dofsadmin\\My Documents\\My Virtual Machines\\Windows XP Professional\\Windows XP Professional.vmx\"",
-                                                    "WinXP-CompNameChange",
-                                                    "192.168.20.174");
-  */
+                    if (clientResp.Length > RESP_LEN_OFFSET){
+
+
                         entry.timestamp = DateTime.Now;
+                        string[] temp = System.Text.Encoding.ASCII.GetString(clientResp).Split(':');
+
+                        if (temp.Length == 3) {
+                          
+                            entry.username = temp[1].ToString();
+                            entry.password = temp[2].ToString();
+                        }
+                       
                         entry.busy = true;
                         queue.Enqueue(entry);
 
@@ -213,11 +235,15 @@ namespace VMManager
 
         private void GetVMInfo()
         {
+            Debug.WriteLine("Get VMInfo");
+
             try
             {
                 Debug.WriteLine("Opening Registry");
                 RegistryKey key = Registry.LocalMachine.OpenSubKey(regDir);
-                string tempVMName, tempVMFile, tempVMSnapshot;
+                
+                string tempVMName, tempVMFile, tempVMSnapshot, tempVMUsername, tempVMPassword, tempVMTimestamp;
+
 
                 if (key != null)
                 {
@@ -231,23 +257,42 @@ namespace VMManager
                             tempVMName = vmName + i;
                             tempVMFile = vmFile + i;
                             tempVMSnapshot = vmSnapshot + i;
+                            tempVMUsername = vmUsername + i;
+                            tempVMPassword = vmPassword + i;
+                            tempVMTimestamp = vmTimestamp + i;
                             
                             Debug.WriteLine("Temp VM String " + tempVMName + " " + tempVMFile + " " + tempVMSnapshot);
 
                             vmEntry entry = new vmEntry();
+                            entry.indexNum = i;
                             if (key.GetValue(tempVMName) != null)
                             {
                                 entry.vmName = key.GetValue(tempVMName).ToString();
                             }
                             if (key.GetValue(tempVMFile) != null)
                             {
-                                entry.vmPath = key.GetValue(tempVMFile).ToString();
+                                entry.vmFile = key.GetValue(tempVMFile).ToString();
                             }
                             if (key.GetValue(tempVMSnapshot) != null)
                             {
                                 entry.snapshotName = key.GetValue(tempVMSnapshot).ToString();
                             }
-                            Debug.WriteLine("VM Entry " + entry.vmName + " " + entry.vmPath + " " + entry.snapshotName);
+                            if (key.GetValue(tempVMUsername) != null)
+                            {
+                                entry.username = key.GetValue(tempVMUsername).ToString();
+                                entry.password = key.GetValue(tempVMPassword).ToString();
+                                entry.timestamp = Convert.ToDateTime(key.GetValue(tempVMTimestamp).ToString());
+                                entry.busy = true;
+                                queue.Enqueue(entry);
+
+                            }
+                            else
+                            {
+                                 entry.busy = false;
+                            }
+
+                           
+                            Debug.WriteLine("VM Entry " + entry.vmName + " " + entry.vmFile + " " + entry.snapshotName);
                             vmList.Add(entry);
                         }
                     }
@@ -262,31 +307,30 @@ namespace VMManager
 
         private void WriteEntryToReg(vmEntry entry)
         {
+            ownWrite = true;
             try
             {
                 Debug.WriteLine("Opening Registry");
-                RegistryKey key = Registry.LocalMachine.CreateSubKey(writeRegDir);
+               
+                RegistryKey key = Registry.LocalMachine.CreateSubKey(regDir);
                 int vmNumber;
-                string tempVMPath, tempVMTimestamp;
+                string tempVMFile, tempVMTimestamp,tempVMUsername,tempVMPassword;
 
                 if (key != null)
                 {
-                    if (key.GetValue(numVM) != null)
-                    {
-                        vmNumber = Convert.ToInt32(key.GetValue(numVM).ToString());
-                        vmNumber++;
+                  
+                            tempVMUsername = vmUsername + entry.indexNum;
+                            tempVMPassword = vmPassword + entry.indexNum;
+                            tempVMTimestamp = vmTimestamp + entry.indexNum;
 
-                        tempVMPath = vmPath + vmNumber;
-                        tempVMTimestamp = vmTimestamp + vmNumber;
 
-                        key.SetValue(numVM, vmNumber);
-                        key.SetValue(tempVMPath, entry.vmPath);
                         key.SetValue(tempVMTimestamp, entry.timestamp.ToString());
+                        key.SetValue(tempVMUsername, entry.username);
+                        key.SetValue(tempVMPassword, entry.password);
 
-                        entry.indexNum = vmNumber;
-                    }
                     key.Close();
                 }
+                ownWrite = false;
             }
             catch (Exception e)
             {
@@ -294,64 +338,23 @@ namespace VMManager
             }
         }
 
-        private void CheckActiveVMSet()
+      
+        public void regChanged()
         {
-            try
+            Debug.WriteLine("Sandbox Server: registry key has changed");
+            if (ownWrite == false)
             {
-                Debug.WriteLine("Opening Registry");
-                RegistryKey key = Registry.LocalMachine.CreateSubKey(writeRegDir);
-                int vmNumber;
-                string tempVMPath, tempVMTimestamp;
-                string vmPathValue;
-                DateTime vmTimestampValue;
-
-                if (key != null)
+                queue.clearQueue();
+                lock (vmList)
                 {
-                    if (key.GetValue(numVM) != null)
-                    {   
-                        vmNumber = Convert.ToInt32(key.GetValue(numVM).ToString());
+                    Debug.WriteLine("onRegChanged lock this");
 
-                        for (int i = 1; i <= vmNumber; i++)
-                        {
-                            tempVMPath = vmPath + i;
-                            tempVMTimestamp = vmTimestamp + i;
+                    vmList.Clear();
 
-                            if (key.GetValue(tempVMPath) != null)
-                            {
-                                vmPathValue = key.GetValue(tempVMPath).ToString();
 
-                                Debug.WriteLine("Value in VmPathValue " + vmPathValue + " Num values " + vmNumber);
-                                foreach (vmEntry entry in vmList)
-                                {
-                                    if (vmPathValue.Equals(entry.vmPath))
-                                    {
-                                        Debug.WriteLine("Found a match " + entry.vmPath);
-                                        if (key.GetValue(tempVMTimestamp) != null)
-                                        {
-                                            vmTimestampValue = Convert.ToDateTime(key.GetValue(tempVMTimestamp).ToString());
-
-                                            entry.timestamp = vmTimestampValue;
-                                            entry.busy = true;
-                                            entry.indexNum = i;
-
-                                            queue.Enqueue(entry);
-                                        }
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        key.SetValue(numVM, 0);
-                    }
-                    key.Close();
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine("Exception while checking Reg entries " + e.Message);
+                } GetVMInfo();
+                //   updateList();
+                
             }
         }
     }

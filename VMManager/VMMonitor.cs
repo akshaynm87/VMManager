@@ -10,25 +10,36 @@ namespace VMManager
         Timer vmMonitorTimer;
         VMActivityQueue queue;
 
-        private int MONITOR_INTERVAL = 1; // specified in MINUTES
-        private int EXPIRY_TIME = 2;
+        private int monitorInterval ;//= 1; // specified in MINUTES
+        private int expiryTime; //= 2;
+        private int defaultMonitorInterval = 1;
+        private int defaultExpiryTime = 2;
 
-        string curVMRegDir = @"SOFTWARE\RetherNetworksInc\DOFS-SandBox\CurrentVMSet";
+        //string regMonDir = "HKEY_LOCAL_MACHINE\\SOFTWARE\\RetherNetworksInc\\DOFS-SandBox";
+        string valid = "valid";
+        string interval = "checkInterval";
+
+        //string curVMRegDir = @"SOFTWARE\RetherNetworksInc\DOFS-SandBox\CurrentVMSet";
         string numVM = "numVM";
-
-        string vmPath = "VMPath";
+        string regDir = @"SOFTWARE\RetherNetworksInc\DOFS-SandBox";
+        //string vmFile = "VMFile";
         string vmTimestamp = "VMTimestamp";
+        string vmUsername = "VMUsername";
+        string vmPassword = "VMPassword";
 
         public VMMonitor(VMActivityQueue q)
         {
-            vmMonitorTimer = new Timer(1000 * 60 * MONITOR_INTERVAL);
+            getInfo();
+            vmMonitorTimer = new Timer(1000 * 60 * monitorInterval);
             queue = q;
+            checkVM();
         }
 
         public void Start()
         {
             vmMonitorTimer.Elapsed += new ElapsedEventHandler(RestoreVM);
             vmMonitorTimer.Start();
+            
             Debug.WriteLine("Starting Timer ");
         }
 
@@ -36,16 +47,40 @@ namespace VMManager
         {
             vmMonitorTimer.Stop();
         }
-
-        private void RestoreVM(object sender, ElapsedEventArgs e)
+        public void getInfo()
         {
+            RegistryKey key = Registry.LocalMachine.OpenSubKey(regDir);
+            if (key != null)
+            {
+                if (key.GetValue(valid) != null)
+                {
+                    monitorInterval = Convert.ToInt32(key.GetValue(interval).ToString());
+                }
+                else
+                {
+                    monitorInterval = defaultMonitorInterval;
+                }
+               if(key.GetValue(interval) != null)
+               {
+                   Debug.WriteLine("reading expiry time");
+                    expiryTime = Convert.ToInt32(key.GetValue(valid).ToString());
+                }
+               else{
+               expiryTime=defaultExpiryTime;
+               }
+            }
+        }
+
+        private void checkVM()
+        {
+
             Debug.WriteLine("TImer fired");
             while (queue.isEmpty() == false)
             {
                 Debug.WriteLine("Queue not empty");
 
                 vmEntry entry = (vmEntry)queue.Peek();
-                DateTime ts = DateTime.Now.AddMinutes(-EXPIRY_TIME);
+                DateTime ts = DateTime.Now.AddMinutes(-expiryTime);
 
                 Debug.WriteLine("Time stamps " + ts.ToString() + " and " + entry.timestamp.ToString());
 
@@ -58,9 +93,10 @@ namespace VMManager
 
                         /* Now restore the VM to a snapshot */
                         string vmrun = "C:\\Program Files\\VMware\\VMware Workstation\\vmrun.exe";
-                        string command = " revertToSnapshot " + entry.vmPath + " " + entry.snapshotName;
-//                        string command = " stop " + entry.vmPath;
-                        
+                        string command = " revertToSnapshot " + entry.vmFile + " " + entry.snapshotName;
+                        Debug.WriteLine("command " + command);
+                        //                        string command = " stop " + entry.vmPath;
+
                         System.Diagnostics.ProcessStartInfo procStartInfo = new System.Diagnostics.ProcessStartInfo(vmrun, command);
                         procStartInfo.UseShellExecute = false;
                         procStartInfo.RedirectStandardOutput = true;
@@ -83,7 +119,7 @@ namespace VMManager
 
 
                         System.Threading.Thread.Sleep(5000);
-                        command = " start " + entry.vmPath;
+                        command = " start " + entry.vmFile;
                         procStartInfo = new System.Diagnostics.ProcessStartInfo(vmrun, command);
 
                         procStartInfo.UseShellExecute = false;
@@ -99,6 +135,7 @@ namespace VMManager
                         Debug.WriteLine("Result2 " + result);
 
                         Debug.WriteLine("Dequeue2");
+
                         entry.busy = false;
                         DeleteEntryFromReg(entry);
                     }
@@ -110,6 +147,11 @@ namespace VMManager
                 else
                     break;
             }
+        
+        }
+        private void RestoreVM(object sender, ElapsedEventArgs e)
+        {
+            checkVM();
         }
 
         private void DeleteEntryFromReg(vmEntry entry)
@@ -117,24 +159,26 @@ namespace VMManager
             try
             {
                 Debug.WriteLine("Opening Registry");
-                RegistryKey key = Registry.LocalMachine.CreateSubKey(curVMRegDir);
+                RegistryKey key = Registry.LocalMachine.CreateSubKey(regDir);
                 
-                int vmNumber;
-                string tempVMPath, tempVMTimestamp;
+  
+                string tempVMTimestamp,tempUsername,tempPassword;
 
                 if (key != null)
                 {
                     if (key.GetValue(numVM) != null)
                     {
-                        vmNumber = Convert.ToInt32(key.GetValue(numVM).ToString());
-                        vmNumber--;
+                       
 
-                        tempVMPath = vmPath + entry.indexNum;
+                   
                         tempVMTimestamp = vmTimestamp + entry.indexNum;
+                        tempUsername=vmUsername+entry.indexNum;
+                        tempPassword=vmPassword+entry.indexNum;
 
-                        key.SetValue(numVM, vmNumber);
-                        key.DeleteValue(tempVMPath);
                         key.DeleteValue(tempVMTimestamp);
+                        key.DeleteValue(tempUsername);
+                        key.DeleteValue(tempPassword);
+                       
                     }
                     key.Close();
                 }
@@ -143,6 +187,13 @@ namespace VMManager
             {
                 Debug.WriteLine("Exception while deleting entry from Reg " + e.Message);
             }
+        }
+
+        public void regChanged()
+        {
+            Debug.WriteLine("vmMonitor regChanged");
+            getInfo();
+            vmMonitorTimer.Interval=(1000 * 60 * monitorInterval);
         }
     }
 }

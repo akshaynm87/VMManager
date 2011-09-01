@@ -14,6 +14,7 @@ namespace VMManager
         Server server;
         VMMonitor vmMonitor;
         VMActivityQueue activityQueue;
+        string regMonDir = "HKEY_LOCAL_MACHINE\\SOFTWARE\\RetherNetworksInc\\DOFS-SandBox";
 
         public VMManager()
         {
@@ -27,8 +28,26 @@ namespace VMManager
             server = new Server(activityQueue);
             vmMonitor = new VMMonitor(activityQueue);
             vmMonitor.Start();
-        }
+            regMon();
 
+
+        }
+        public void regMon()
+        {
+            RegistryMonitor monitor = new RegistryMonitor(regMonDir);
+
+            monitor.RegChanged += new EventHandler(OnRegChanged);
+            monitor.Start();
+
+        }
+        private void OnRegChanged(object sender, EventArgs e)
+        {
+            Debug.WriteLine("reg Changed");
+            server.regChanged();
+            vmMonitor.regChanged();
+
+
+        }
         protected override void OnStop()
         {
             if (vmMonitor != null)

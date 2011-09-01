@@ -12,9 +12,16 @@ namespace VMManager
 
         public VMActivityQueue()
         {
-            queue = new Queue();
+            
+                queue = new Queue();
+            
         }
-
+        public void clearQueue() {
+            lock (queue)
+            {
+                queue.Clear();
+            }
+        }
         public void Enqueue(object o)
         {
             lock (queue)

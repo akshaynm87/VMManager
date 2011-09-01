@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Text;
 
-namespace VMManager
+namespace VmManagerConfiguration
 {
     public class vmEntry
     {
@@ -29,5 +31,4 @@ namespace VMManager
             indexNum = 0;
         }
     }
-
 }
