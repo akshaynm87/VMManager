@@ -56,6 +56,8 @@
             this.labelInterval = new System.Windows.Forms.Label();
             this.textBoxValid = new System.Windows.Forms.TextBox();
             this.labelValid = new System.Windows.Forms.Label();
+            this.labelIP = new System.Windows.Forms.Label();
+            this.textBoxIP = new System.Windows.Forms.TextBox();
             this.groupBoxDetail.SuspendLayout();
             this.groupBoxGeneralSettings.SuspendLayout();
             this.SuspendLayout();
@@ -80,6 +82,8 @@
             // 
             // groupBoxDetail
             // 
+            this.groupBoxDetail.Controls.Add(this.textBoxIP);
+            this.groupBoxDetail.Controls.Add(this.labelIP);
             this.groupBoxDetail.Controls.Add(this.buttonCreateUser);
             this.groupBoxDetail.Controls.Add(this.textBoxPassword);
             this.groupBoxDetail.Controls.Add(this.textBoxUsername);
@@ -202,11 +206,11 @@
             this.textBoxVMSnapshotName.Name = "textBoxVMSnapshotName";
             this.textBoxVMSnapshotName.Size = new System.Drawing.Size(202, 20);
             this.textBoxVMSnapshotName.TabIndex = 4;
-       
+            this.textBoxVMSnapshotName.TextChanged += new System.EventHandler(this.textBoxVMSnapshotName_TextChanged);
             // 
             // buttonVMFile
             // 
-            this.buttonVMFile.Location = new System.Drawing.Point(487, 84);
+            this.buttonVMFile.Location = new System.Drawing.Point(487, 100);
             this.buttonVMFile.Name = "buttonVMFile";
             this.buttonVMFile.Size = new System.Drawing.Size(75, 23);
             this.buttonVMFile.TabIndex = 3;
@@ -228,7 +232,7 @@
             // 
             this.labelVMFile.AutoSize = true;
             this.labelVMFile.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelVMFile.Location = new System.Drawing.Point(9, 84);
+            this.labelVMFile.Location = new System.Drawing.Point(9, 100);
             this.labelVMFile.Name = "labelVMFile";
             this.labelVMFile.Size = new System.Drawing.Size(53, 16);
             this.labelVMFile.TabIndex = 1;
@@ -236,11 +240,11 @@
             // 
             // textBoxVMFile
             // 
-            this.textBoxVMFile.Location = new System.Drawing.Point(160, 84);
+            this.textBoxVMFile.Location = new System.Drawing.Point(160, 103);
             this.textBoxVMFile.Name = "textBoxVMFile";
             this.textBoxVMFile.Size = new System.Drawing.Size(307, 20);
             this.textBoxVMFile.TabIndex = 0;
-            this.textBoxVMFile.Leave += new System.EventHandler(this.textBoxVMFile_Leave);
+            this.textBoxVMFile.TextChanged += new System.EventHandler(this.textBoxVMFile_TextChanged);
             // 
             // buttonSave
             // 
@@ -333,6 +337,24 @@
             this.labelValid.TabIndex = 0;
             this.labelValid.Text = "Validty time(min):";
             // 
+            // labelIP
+            // 
+            this.labelIP.AutoSize = true;
+            this.labelIP.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelIP.Location = new System.Drawing.Point(9, 75);
+            this.labelIP.Name = "labelIP";
+            this.labelIP.Size = new System.Drawing.Size(77, 16);
+            this.labelIP.TabIndex = 14;
+            this.labelIP.Text = "IP Address:";
+            // 
+            // textBoxIP
+            // 
+            this.textBoxIP.Location = new System.Drawing.Point(160, 77);
+            this.textBoxIP.Name = "textBoxIP";
+            this.textBoxIP.Size = new System.Drawing.Size(307, 20);
+            this.textBoxIP.TabIndex = 15;
+            this.textBoxIP.TextChanged += new System.EventHandler(this.textBoxIP_TextChanged);
+            // 
             // VMManagerConfigUI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -387,6 +409,8 @@
         private System.Windows.Forms.TextBox textBoxInterval;
         private System.Windows.Forms.Label labelInterval;
         private System.Windows.Forms.Button buttonCreateUser;
+        private System.Windows.Forms.TextBox textBoxIP;
+        private System.Windows.Forms.Label labelIP;
     }
 }
 

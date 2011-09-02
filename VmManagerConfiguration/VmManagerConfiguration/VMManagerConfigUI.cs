@@ -51,7 +51,7 @@ namespace VmManagerConfiguration
 
             ownWrite = false;
             GetVMInfo();
-           updateList();
+            updateList();
             regMon();
 
 
@@ -151,9 +151,10 @@ namespace VmManagerConfiguration
                     {
                         textBoxVMFile.Text = entry.vmFile;
                         textBoxVMSnapshotName.Text = entry.snapshotName;
+                        textBoxIP.Text = entry.vmName;
                         if (entry.busy)
                         {
-
+                            textBoxIP.ReadOnly = true;
                             labelSetActive.Text = "Yes";
                             textBoxVMFile.ReadOnly = true;
                             buttonVMFile.Enabled = false;
@@ -166,6 +167,7 @@ namespace VmManagerConfiguration
                         }
                         else
                         {
+                            textBoxIP.ReadOnly = false;
                             labelSetActive.Text = "No";
                             textBoxVMFile.ReadOnly = false;
                             textBoxVMSnapshotName.ReadOnly = false;
@@ -402,19 +404,7 @@ namespace VmManagerConfiguration
             updateList();
         }
 
-        private void textBoxVMFile_Leave(object sender, EventArgs e)
-        {
-            if (vmList[currentIndex].busy == false)
-            vmList[currentIndex].vmFile = textBoxVMFile.Text;
-        }
-
-        private void textBoxVMSnapshotName_Leave(object sender, EventArgs e)
-        {
-            if (vmList[currentIndex].busy==false)
-            vmList[currentIndex].snapshotName = textBoxVMSnapshotName.Text;
-        }
-
-        
+       
 
         private vmEntry getCurrentEntry(){
         
@@ -695,6 +685,29 @@ namespace VmManagerConfiguration
             catch (Exception e)
             {
                 Debug.WriteLine("Exception while adding entry to Reg " + e.Message);
+            }
+        }
+
+        private void textBoxVMFile_TextChanged(object sender, EventArgs e)
+        {
+            if (vmList[currentIndex].busy == false)
+                vmList[currentIndex].vmFile = textBoxVMFile.Text;
+        }
+
+        private void textBoxVMSnapshotName_TextChanged(object sender, EventArgs e)
+        {
+            if (vmList[currentIndex].busy == false)
+                vmList[currentIndex].snapshotName = textBoxVMSnapshotName.Text;
+
+        }
+
+        private void textBoxIP_TextChanged(object sender, EventArgs e)
+        {
+            if (vmList[currentIndex].busy == false)
+            {
+                vmList[currentIndex].vmName = textBoxIP.Text;
+                listBoxVMList.Items[currentIndex] = textBoxIP.Text;
+                listBoxVMList.Refresh();
             }
         }
 
